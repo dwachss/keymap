@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<script src="http://code.jquery.com/jquery-3.5.1.js"></script>
+	<script src="jquery.keymap.js"></script>
+</head>
+<body>
+<fieldset>
+<p>
+<p><label>Key Descriptor: <input id=input type="text" /></label> Normalized: <span id=normalized ></span></p>
+<p><input id=generate type=button value="Generate Keydown for this key" /></p>
+</fieldset>
+<p>Track:
+	<label><input type=radio name=choose id=keydown checked /> keydown</label>
+	<label><input type=radio name=choose id=keyup /> keyup</label>
+</p>
+<p>Event.code: <span id=code></span></p>
+<p>Event.key: <span id=key></span></p>
+<p>Event.shiftKey: <span id=shift></span></p>
+<p>Event.ctrlKey: <span id=ctrl></span></p>
+<p>Event.altKey: <span id=alt></span></p>
+<p>Event.metaKey: <span id=meta></span></p>
+<p>Mapped Key: <span id=keymap style="font-weight: bold"></span></p>
+
+<p></p>
+<p>Type here: <span contenteditable>This is a test</span></p>
+
+<script>
+	function map(e){
+		$('#keymap').text(e.keymap || '');
+		$('#code').text(e.code || '');
+		$('#key').text(e.key || '');
+		$('#shift').text(!!e.shiftKey || '');
+		$('#ctrl').text(!!e.ctrlKey || '');
+		$('#alt').text(!!e.altKey || '');
+		$('#meta').text(!!e.metaKey || '');
+	}
+	$('body').on('keydown', map);
+	$(':radio').on('change', function(){
+		$('body').off('keydown keyup');
+		$('body').on(this.id, map);
+	});
+	$('#input').on('input', function(){
+		$('#normalized').text($.keymap.normalizeString(this.value));
+	});
+	$('#generate').click(function(){
+		$('body').trigger({
+			type: 'keydown',
+			keymap: $.keymap.normalizeString( $('#input').val() )
+		});
+	})
+</script>
+</body>
+</html>
