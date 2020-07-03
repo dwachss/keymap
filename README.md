@@ -54,3 +54,20 @@ $(element).on('keydown', {keys: 'A B'}, event => {
   // do something
 });
 ````
+
+## Usage
+
+The jquery.keymap.js file patches the jQuery `keydown` and `keyup` events to accept event handlers like:
+````js
+$(element).on('keydown', {keys: keyDescriptorString: string [, allowDefault: boolean]}, handlerFunction);
+````
+
+and allow removing handlers (in addition to all the other ways to remove handlers) with:
+
+````js
+$(element).off('keydown', {keys: keyDescriptorString}); // removes all handlers that had that keyDescriptorString
+````
+
+`keyDescriptorString` is a space-delimited list of `keyDescriptor`s, each of which is the value of the [`key` field of the KeyboardEvent](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values), with modifier keys prepended, in the order of `(ctrl-)?(alt-)?(meta-)?(shift-)?key`. Printable characters (ones with a single-character `key` value) ignore the `shift`, since that is part of the character generated. So control-lowercase a would be `ctrl-a`; control-uppercase a would be `ctrl-A`; control-1 is `ctrl-1`, with no distinction between main keyboard and numerical keypad. Alt-octothorpe would be `alt-#`, not `alt-shift-3` on a US keyboard. There are two exceptions:
+1. Space is `Space`, not `" "`, since I use actual spaces to delimit key descriptors.
+2. Letters (a-z and A-Z) with modifiers use the `code` field, rather than the `key` field.
