@@ -1,34 +1,8 @@
-//
 // Version: 4.1
 // Copyright (c) 2020 Daniel Wachsstock
-// MIT license:
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
 
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
 
 (function($){
-	// adds supports for limiting keydown and keyup to specific key combinations, as $().on('keydown', 'ctrl-A', func);
-	// allows listening for sequences of keys as well: $().on('keydown', 'a b c', func); will trigger only when the a, b, and c keys are pressed in order
-	// NOTE: tries to implement the meta key but I'm not sure if it works (I only have a Windows machine on which to test this).
-	// Ignores the AltGr.
-	
 
 //---- Map a KeyEvent to a string that describes the keys pressed
 	$.keymap = function (evt){
@@ -169,10 +143,10 @@
 		$.event.special[type].handle = function (evt){
 			var self = $(this);
 			var key = $.keymap(evt).keymap; // always generate a keymap
+			if (!key) return  evt.handleObj.handler.apply( this, arguments );
 			if (!evt.data) return evt.handleObj.handler.apply( this, arguments );
 			var keys = evt.data.keys; // array of target keys for this handler
-			if (!keys) return  evt.handleObj.handler.apply( this, arguments );;
-			if (!key) return  evt.handleObj.handler.apply( this, arguments );;
+			if (!keys) return  evt.handleObj.handler.apply( this, arguments );
 			// we need to keep track of keys on this particular element, and separately for each handler.
 			var targetData = $.data(evt.target);
 			targetData.keymap = targetData.keymap || [];
