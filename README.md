@@ -78,7 +78,7 @@ That is the "normalized" form of the keys. The program allows lots of synonyms f
 
 The `keyDescriptorString`can also be a regular expression: `keys: /F\d+/` matches any function key; `keys: /ctrl-[a-zA-z] (Escape|Enter)/` matches any control-letter followed by the escape key or the enter key. The regular expression has to match the normalized form; it's not smart enough to translate the synonyms. Note the space between keys in the regular expression.
 
-The `allowDefault` option addresses the problem of keys that match the 'prefix' of the `keyDescriptorString`. The handler is only called after all the keys match, so `event.preventDefault()` will only prevent the default on that last key. `$(element).on('keydown', {keys: 'ArrowUp ArrowUp ArrowDown ArrowDown'}, handler)` will still propagate the first three keys (`ArrowUp ArrowUp ArrowDown`) even if `handler` calls `preventDefault`. The program assumes that's *not* what you want and calls `preventDefault` on every key event, unlee `allowDefault` is true.
+The `allowDefault` option addresses the problem of keys that match the 'prefix' of the `keyDescriptorString`. The handler is only called after all the keys match, so `event.preventDefault()` will only prevent the default on that last key. `$(element).on('keydown', {keys: 'ArrowUp ArrowUp ArrowDown ArrowDown'}, handler)` will still propagate the first three keys (`ArrowUp ArrowUp ArrowDown`) even if `handler` calls `preventDefault`. The program assumes that's *not* what you want and calls `preventDefault` on every key event, unless `allowDefault` is true.
 
 ## Event handling
 
