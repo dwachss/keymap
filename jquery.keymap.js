@@ -143,15 +143,13 @@
 		$.event.special[type].handle = function (evt){
 			var self = $(this);
 			var key = $.keymap(evt).keymap; // always generate a keymap
-			if (!key) return  evt.handleObj.handler.apply( this, arguments );
-			if (!evt.data) return evt.handleObj.handler.apply( this, arguments );
-			var keys = evt.data.keys; // array of target keys for this handler
-			if (!keys) return  evt.handleObj.handler.apply( this, arguments );
+			var keys = evt.data?.keys; // array of target keys for this handler
+			if (!keys) return  evt.handleObj.handler.apply( this, arguments ); 
+			if (!key) return; // there is a keys field on the handler, but the event was a modifier key. It won't match
 			// we need to keep track of keys on this particular element, and separately for each handler.
 			var targetData = $.data(evt.target);
 			targetData.keymap = targetData.keymap || [];
 			var currSequence = targetData.keymap[evt.data.guid];
-			var key = $.keymap(evt).keymap; // current key
 			var currSequence = currSequence ? currSequence + ' ' + key : key;
 			while (currSequence){
 				var length = currSequence.split(' ').length;
