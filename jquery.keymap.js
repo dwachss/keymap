@@ -1,6 +1,6 @@
 // Version: 4.1
 // Copyright (c) 2020 Daniel Wachsstock
-
+'use strict';
 
 (function($){
 
@@ -87,7 +87,7 @@
 				(/\+/.test(p1) ? 'shift-' : '') + p2;
 		},
 	};
-	for (alias in aliasgenerator){
+	for (let alias in aliasgenerator){
 		// mark whole words
 		var key = aliasgenerator[alias];
 		if (/^\w/.test(alias)) alias = '\\b'+alias;
