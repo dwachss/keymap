@@ -3,11 +3,11 @@
 'use strict';
 
 (()=>{
-const canonicalSpellings = 'ArrowDown ArrowLeft ArrowRight ArrowUp Backspace CapsLock Delete End Enter Escape Home Insert NumLock PageDown PageUp Pause ScrollLock Spacebar Tab'.split(' ');
+const canonicalSpellings = 'ArrowDown ArrowLeft ArrowRight ArrowUp Backspace CapsLock Delete End Enter Escape Home Insert NumLock PageDown PageUp Pause ScrollLock Space Tab'.split(' ');
 const lowercaseSpellings = canonicalSpellings.map(s => new RegExp(`\\b${s}\\b`, 'gi'));
 // Microsoft SendKeys notation, https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sendkeys-statement
 // 'Return' is from VIM, https://vimhelp.org/intro.txt.html#%3CReturn%3E
-const alternateSpellings = 'Down Left Right Up BS CapsLock Del End Return Esc Home Ins NumLock PGDN PGUP Break ScrollLock Space Tab'.split(' ').map(s => new RegExp(`\\b${s}\\b`, 'gi'));
+const alternateSpellings = 'Down Left Right Up BS CapsLock Del End Return Esc Home Ins NumLock PGDN PGUP Break ScrollLock Spacebar Tab'.split(' ').map(s => new RegExp(`\\b${s}\\b`, 'gi'));
 // modifier keys. VIM uses '-', jquery.hotkeys uses '+', https://github.com/jresig/jquery.hotkeys
 // Not using meta-
 const modifiers = [[/s(hift)?[+-]/gi, '+'], [/c(trl)?[+-]/gi, '^'], [/a(lt)?[+-]/gi, '%']];

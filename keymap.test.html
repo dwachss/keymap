@@ -25,7 +25,7 @@ QUnit.test('normalize', assert => {
 	assert.equal(keymap.normalize('s-* shift-/ s+- shift+[ +]'), 'shift-* shift-/ shift-- shift-[ shift-]', 'shifted other characters are normalized');
 	assert.equal(keymap.normalize('+%esc +^%enter'), 'alt-shift-Escape ctrl-alt-shift-Enter', 'modifier keys are ordered and shifted names keys retain the shift');
 	assert.equal(keymap.normalize('+%esc +^%esc esc'), 'alt-shift-Escape ctrl-alt-shift-Escape Escape', 'global replace key names');
-	assert.equal(keymap.normalize(' +%space  +^% '), 'alt-shift-Spacebar ctrl-shift-%', 'Spacebar is normalized and extra spaces are ignored');
+	assert.equal(keymap.normalize(' +%spacebar  +^% '), 'alt-shift-Space ctrl-shift-%', 'Space is normalized and extra spaces are ignored');
 	assert.equal(keymap.normalize('^{a} <^b> +{a} <c-b> {}}'), 'ctrl-a ctrl-b A ctrl-b }', 'angle brackets and braces are normalized');
 	assert.equal(keymap.normalize('{up} {up} {down} {down}'), 'ArrowUp ArrowUp ArrowDown ArrowDown', 'repeated braces are normalized');
 });
@@ -81,7 +81,7 @@ QUnit.test('keymap', assert => {
 	div.dispatchEvent(syntheticKeyevents('Enter', 'enter', false, false, false)[0]);
 	// currentSequence should be attached in the final handler
 	div.removeEventListener('keydown', handler2);
-	const handler3 = keymap('esc space enter', evt => assert.equal(evt.currentTarget[handler3.keymapPrefix], 'Escape Spacebar Enter', '.keymapPrefix set'));
+	const handler3 = keymap('esc space enter', evt => assert.equal(evt.currentTarget[handler3.keymapPrefix], 'Escape Space Enter', '.keymapPrefix set'));
 	div.addEventListener('keydown', handler3);
 	div.dispatchEvent(syntheticKeyevents('Escape', 'Escape', false, false, false)[0]);
 	div.dispatchEvent(syntheticKeyevents(' ', 'Spacebar', false, false, false)[0]);
