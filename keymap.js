@@ -96,8 +96,8 @@ function addKeyDescriptor(evt){
 	const {code, shiftKey, ctrlKey, altKey} = evt;
 	let key = evt.key; // needs to be variable
 	if (!key || /^(?:shift|control|meta|alt)$/i.test(key)) return evt; // ignore undefined or modifier keys alone
-	// we use spaces to delimit keystrokes, so this needs to be changed; use the old code (https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values#whitespace_keys)
-	if (key == ' ') key = 'Spacebar';
+	// we use spaces to delimit keystrokes, so this needs to be changed; use the code
+	if (key == ' ') key = 'Space';
 	// In general, use the key field. However, modified letters (ctrl- or alt-) use the code field
 	// so that ctrl-A is the A key even on non-English keyboards.
 	if (ctrlKey || altKey){
