@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>keymap Testing</title>
+<link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.19.4.css">
+</head>
+<body>
+<div id="qunit"></div>
+<div id="qunit-fixture" contenteditable></div>
+<script src="https://code.jquery.com/qunit/qunit-2.19.4.js"></script>
+<script src=keymap.js></script>
+<script>
+
+QUnit.test('normalize', assert => {
+	const keys = 'ArrowDown ArrowLeft ArrowRight ArrowUp Backspace CapsLock Delete End Enter Escape Home Insert NumLock PageDown PageUp Pause ScrollLock Tab';
+	assert.equal(keymap.normalize(keys.toLowerCase()), keys, 'lower case keys are normalized');
+	assert.equal(keymap.normalize(keys.toUpperCase()), keys, 'UPPER CASE keys are normalized');
+	assert.equal(keymap.normalize('Down Left Right Up BS CapsLock Del End Return Esc Home Ins NumLock PGDN PGUP Break ScrollLock Tab'), keys, 'alternate forms are normalized');
+	assert.equal(keymap.normalize('c-a ctrl-a c+a ctrl+a ^a'), 'ctrl-a ctrl-a ctrl-a ctrl-a ctrl-a', 'control forms are normalized');
+	assert.equal(keymap.normalize('c-^ ctrl-+ c+% ctrl+- ^^'), 'ctrl-^ ctrl-+ ctrl-% ctrl-- ctrl-^', 'control special characters are normalized');
+	assert.equal(keymap.normalize('a-a alt-a a+a alt+a %a'), 'alt-a alt-a alt-a alt-a alt-a', 'alt forms are normalized');
+	assert.equal(keymap.normalize('s-a shift-a s+a shift+a +a'), 'A A A A A', 'shifted letters are normalized');
+	assert.equal(keymap.normalize('s-+ shift-+ s++ shift++ ++'), 'shift-+ shift-+ shift-+ shift-+ shift-+', 'shifted pluses are normalized');
+	assert.equal(keymap.normalize('s-* shift-/ s+- shift+[ +]'), 'shift-* shift-/ shift-- shift-[ shift-]', 'shifted other characters are normalized');
+	assert.equal(keymap.normalize('+%esc +^%enter'), 'alt-shift-Escape ctrl-alt-shift-Enter', 'modifier keys are ordered and shifted names keys retain the shift');
+	assert.equal(keymap.normalize('+%esc +^%esc esc'), 'alt-shift-Escape ctrl-alt-shift-Escape Escape', 'global replace key names');
+	assert.equal(keymap.normalize(' +%space  +^% '), 'alt-shift-Spacebar ctrl-shift-%', 'Spacebar is normalized and extra spaces are ignored');
+	assert.equal(keymap.normalize('^{a} <^b> +{a} <c-b> {}}'), 'ctrl-a ctrl-b A ctrl-b }', 'angle brackets and braces are normalized');
+	assert.equal(keymap.normalize('{up} {up} {down} {down}'), 'ArrowUp ArrowUp ArrowDown ArrowDown', 'repeated braces are normalized');
+});
+
+function syntheticKeyevents(key, code, shiftKey, ctrlKey, altKey){
+	return ['keydown','keyup'].map( type => keymap.addKeyDescriptor(new KeyboardEvent(type, {key, code, shiftKey, ctrlKey, altKey})) );
+}
+
+QUnit.test('addKeyDescriptor', assert => {
+	let keys = syntheticKeyevents('a', 'KeyA', false, false, false).map( evt => evt.keyDescriptor );
+	assert.deepEqual(keys, ['a', 'a'], 'a');
+	keys = syntheticKeyevents('A', 'KeyA', true, false, false).map( evt => evt.keyDescriptor );
+	assert.deepEqual(keys, ['A', 'A'], 'A');
+	keys = syntheticKeyevents('א', 'KeyA', false, true, false).map( evt => evt.keyDescriptor );
+	assert.deepEqual(keys, ['ctrl-a', 'ctrl-a'], 'ctrl-A');
+	keys = syntheticKeyevents('א', 'KeyA', true, true, true).map( evt => evt.keyDescriptor );
+	assert.deepEqual(keys, ['ctrl-alt-A', 'ctrl-alt-A'], 'ctrl-alt-A');
+	keys = syntheticKeyevents('\n', 'Enter', true, true, true).map( evt => evt.keyDescriptor );
+	assert.deepEqual(keys, ['ctrl-alt-shift-Enter', 'ctrl-alt-shift-Enter'], 'ctrl-alt-shift-Enter');
+});
+
+QUnit.test('keymap', assert => {
+	assert.expect(6);
+	const div = document.getElementById('qunit-fixture');
+	const handler = keymap('a B ^c %d', evt => assert.ok(true, `'a b ^c %d' triggered`));
+	div.addEventListener('keydown', handler);
+	div.dispatchEvent(syntheticKeyevents('a', 'KeyA', false, false, false)[0]); // dispatch is synchronous
+	div.dispatchEvent(syntheticKeyevents('B', 'KeyB', true, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('c', 'KeyC', false, true, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('d', 'KeyD', false, false, true)[0]);
+	// do it again
+	div.dispatchEvent(syntheticKeyevents('q', 'KeyQ', false, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('a', 'KeyA', false, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('B', 'KeyB', true, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('c', 'KeyC', false, true, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('d', 'KeyD', false, false, true)[0]);
+	// wrong sequence
+	div.dispatchEvent(syntheticKeyevents('a', 'KeyA', false, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('b', 'KeyB', false, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('c', 'KeyC', false, true, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('d', 'KeyD', false, false, true)[0]);
+	//remove listener
+	div.removeEventListener('keydown', handler);
+	div.dispatchEvent(syntheticKeyevents('a', 'KeyA', false, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('B', 'KeyB', true, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('c', 'KeyC', false, true, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('d', 'KeyD', false, false, true)[0]);
+	// prefixes
+	const handler2 = keymap('esc space enter', evt => assert.ok(true, `'Escape Spacebar Enter' triggered`), evt => assert.ok(true, `prefix '${evt.currentTarget[handler2.keymapPrefix]}' triggered`));
+	div.addEventListener('keydown', handler2);
+	div.dispatchEvent(syntheticKeyevents('Escape', 'Escape', false, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents(' ', 'Spacebar', false, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('Enter', 'enter', false, false, false)[0]);
+	// currentSequence should be attached in the final handler
+	div.removeEventListener('keydown', handler2);
+	const handler3 = keymap('esc space enter', evt => assert.equal(evt.currentTarget[handler3.keymapPrefix], 'Escape Spacebar Enter', '.keymapPrefix set'));
+	div.addEventListener('keydown', handler3);
+	div.dispatchEvent(syntheticKeyevents('Escape', 'Escape', false, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents(' ', 'Spacebar', false, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('Enter', 'enter', false, false, false)[0]);
+});
+
+</script>
+</body>
+</html>
