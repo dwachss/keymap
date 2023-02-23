@@ -126,6 +126,7 @@ function keymap (keyDescriptorTarget, handler, prefixHandler = ( evt => { evt.pr
 	const newHandler = function (evt){
 		const keyDescriptorSource = addKeyDescriptor(evt).keyDescriptor;
 		if (!keyDescriptorSource) return; // it is a modifier key
+		evt.keymapFilter = keyDescriptorTarget;
 		const el = evt.currentTarget;
 		let currentSequence = keyDescriptorSource;
 		if (el[prefixSymbol]) currentSequence = `${el[prefixSymbol]} ${currentSequence}`;
@@ -151,6 +152,7 @@ function keymap (keyDescriptorTarget, handler, prefixHandler = ( evt => { evt.pr
 		delete el[prefixSymbol]; // no matches at all. 
 	};
 	newHandler.keymapPrefix = prefixSymbol;
+	newHandler.keymapFilter = keyDescriptorTarget;
 	return newHandler;
 }
 

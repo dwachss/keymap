@@ -48,9 +48,10 @@ QUnit.test('addKeyDescriptor', assert => {
 });
 
 QUnit.test('keymap', assert => {
-	assert.expect(6);
+	assert.expect(8);
 	const div = document.getElementById('qunit-fixture');
 	const handler = keymap('a B ^c %d', evt => assert.ok(true, `'a b ^c %d' triggered`));
+	assert.equal(handler.keymapFilter, 'a B ^c %d', 'keymapFilter set on handler');
 	div.addEventListener('keydown', handler);
 	div.dispatchEvent(syntheticKeyevents('a', 'KeyA', false, false, false)[0]); // dispatch is synchronous
 	div.dispatchEvent(syntheticKeyevents('B', 'KeyB', true, false, false)[0]);
@@ -86,6 +87,10 @@ QUnit.test('keymap', assert => {
 	div.dispatchEvent(syntheticKeyevents('Escape', 'Escape', false, false, false)[0]);
 	div.dispatchEvent(syntheticKeyevents(' ', 'Spacebar', false, false, false)[0]);
 	div.dispatchEvent(syntheticKeyevents('Enter', 'enter', false, false, false)[0]);
+	const handler4 = keymap(/[A-Z] [0-9]/, evt => assert.ok(evt.keymapFilter.exec(evt.keymapSequence), 'keymapFilter matches sequence'));
+	div.addEventListener('keydown', handler4);
+	div.dispatchEvent(syntheticKeyevents('A', 'KeyA', true, false, false)[0]);
+	div.dispatchEvent(syntheticKeyevents('1', 'Digit1', false, false, false)[0]);
 });
 
 </script>

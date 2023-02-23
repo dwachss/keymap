@@ -80,9 +80,15 @@ The `keyDescriptor`can also be a regular expression: `/F\d+/` matches any functi
 
 `prefixHandler` is an event handler that handles "prefixes", the key sequence that leads to the final one. If the `keyDescriptor` is `'ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight B A'`, then `prefixhandler` will be called with every key press as long as it is still generating a legal sequence. For example, if the user presses `ArrowUp`, `ArrowUp`, `ArrowDown`, `Enter`, then `prefixhandler` will be called three times. The default `prefixHandler` is `event => event.preventDefault()`, so the intermediate keys do not generate characters. To allow the keys to generate their usual characters (as with the [Konami cheat code](https://en.wikipedia.org/wiki/Konami_Code), you want everything to look normal until it is activated), use a no-op function, `event => event`.
 
-`keymap` adds a field to the handler, `newHandler.keymapPrefix`, which is a [`Symbol`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol) that is used as the field in each event that holds the prefix for the sequence being built.
+`keymap` adds two fields to the handler (not the prefix handler):
+1. `newHandler.keymapPrefix`, which is a [`Symbol`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol) that is used as the field in each event that holds the prefix for the sequence being built.
+2. `newHandler.keymapFilter`, which is the `keyDescriptor` that was passed to `keymap` initially.
 
-The event passed to the event handlers will have a field, `event.keyDescriptor`, which is a string representing the key with its modifiers.
+### new fields on Event
+
+The event passed to the event handlers will have three fields added:
+
+1. `event.keyDescriptor`, which is a string representing the key with its modifiers.
 
 ````js
 const event = new KeyboardEvent('keydown', {key: 'A', code: 'KeyA', shiftKey: true, ctrlKey: false, altKey: true})`
@@ -90,7 +96,16 @@ const event = new KeyboardEvent('keydown', {key: 'A', code: 'KeyA', shiftKey: tr
 
 would have `event.keyDescriptor === 'alt-A'` when passed to the event handers.
 
-In addition, `event.currentTarget[newHandler.keymapPrefix]` can be used in the handlers to find what keys have been processed so far. 
+2. `event.keymapSequence` that contains the list of keys processed so far. So for a handler like
+
+````js
+const handler = keymap (/Escape [a-z]/, evt => console.log(evt.keymapSequence));
+element.addEventListener('keydown', handler);
+````
+
+Then pressing `Escape` then `q` will log `"Escape q`.
+
+3. `event.keymapFilter` is the `keyDescriptor` that was passed to `keymap` initially (it is just `newHandler.keymapFilter`). In the above example, `event.keymapFilter === /Escape [a-z]/`.
 
 ## Other functions
 
