@@ -74,14 +74,14 @@ QUnit.test('keymap', assert => {
 	div.dispatchEvent(syntheticKeyevents('c', 'KeyC', false, true, false)[0]);
 	div.dispatchEvent(syntheticKeyevents('d', 'KeyD', false, false, true)[0]);
 	// prefixes
-	const handler2 = keymap('esc space enter', evt => assert.ok(true, `'Escape Spacebar Enter' triggered`), evt => assert.ok(true, `prefix '${evt.currentTarget[handler2.keymapPrefix]}' triggered`));
+	const handler2 = keymap('esc space enter', evt => assert.ok(true, `'Escape Spacebar Enter' triggered`), evt => assert.ok(true, `prefix '${evt.keymapSequence}' triggered`));
 	div.addEventListener('keydown', handler2);
 	div.dispatchEvent(syntheticKeyevents('Escape', 'Escape', false, false, false)[0]);
 	div.dispatchEvent(syntheticKeyevents(' ', 'Spacebar', false, false, false)[0]);
 	div.dispatchEvent(syntheticKeyevents('Enter', 'enter', false, false, false)[0]);
 	// currentSequence should be attached in the final handler
 	div.removeEventListener('keydown', handler2);
-	const handler3 = keymap('esc space enter', evt => assert.equal(evt.currentTarget[handler3.keymapPrefix], 'Escape Space Enter', '.keymapPrefix set'));
+	const handler3 = keymap('esc space enter', evt => assert.equal(evt.keymapSequence, 'Escape Space Enter', '.keymapSequence set'));
 	div.addEventListener('keydown', handler3);
 	div.dispatchEvent(syntheticKeyevents('Escape', 'Escape', false, false, false)[0]);
 	div.dispatchEvent(syntheticKeyevents(' ', 'Spacebar', false, false, false)[0]);

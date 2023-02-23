@@ -135,13 +135,12 @@ function keymap (keyDescriptorTarget, handler, prefixHandler = ( evt => { evt.pr
 				// we have a match
 				if (length == prefixes.length){
 					// we have a match for the whole thing
-					el[prefixSymbol] = currentSequence; // handler should have the currentSequence available
-					const ret = handler.apply(this, arguments);
+					evt.keymapSequence = currentSequence; // handler should have the currentSequence available
 					delete el[prefixSymbol];
-					return ret;
+					return handler.apply(this, arguments);
 				}else{
 					// it's a match for the start of the sequence of keys
-					el[prefixSymbol] = currentSequence;
+					evt.keymapSequence = el[prefixSymbol] = currentSequence;
 					return prefixHandler.apply(this, arguments);
 				}
 			}
