@@ -48,7 +48,7 @@ QUnit.test('addKeyDescriptor', assert => {
 });
 
 QUnit.test('keymap', assert => {
-	assert.expect(8);
+	assert.expect(9);
 	const div = document.getElementById('qunit-fixture');
 	const handler = keymap('a B ^c %d', evt => assert.ok(true, `'a b ^c %d' triggered`));
 	assert.equal(handler.keymapFilter, 'a B ^c %d', 'keymapFilter set on handler');

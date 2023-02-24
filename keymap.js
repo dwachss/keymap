@@ -134,16 +134,14 @@ function keymap (keyDescriptorTarget, handler, prefixHandler = ( evt => { evt.pr
 			const length = currentSequence.split(' ').length;
 			if ( prefixes[length-1].test(currentSequence) ){
 				// we have a match
+				evt.keymapSequence = el[prefixSymbol] = currentSequence;
+				prefixHandler.apply(this, arguments);
 				if (length == prefixes.length){
 					// we have a match for the whole thing
-					evt.keymapSequence = currentSequence; // handler should have the currentSequence available
 					delete el[prefixSymbol];
 					return handler.apply(this, arguments);
-				}else{
-					// it's a match for the start of the sequence of keys
-					evt.keymapSequence = el[prefixSymbol] = currentSequence;
-					return prefixHandler.apply(this, arguments);
 				}
+				return;
 			}
 			// if we get here, then we do not have a match. Maybe we started too soon (looking for 'a b c', got 'a a b c' and matched the beginning of the 
 			// sequence at the first 'a', but that was wrong, so take off the first 'a' and try again
