@@ -1,15 +1,15 @@
-# jquery.keymap.js
+# keymap.js
 
-Implement "hotkeys" for keyboard events.
+## Implement "hotkeys" for keyboard events.
 
-Tested on Chrome, Firefox and Edge (chromium) as of 2020-07-03. Edge Legacy and Internet Explorer do not implement the `code` field, and so fail with modified letters (like control-Z).
+Version 1.0 of this was designed for [jQuery](https://jquery.com/); that version is still available as [release 1.0](https://github.com/dwachss/keymap/releases/tage/v1.0). This version is completely different.
 
-Uses [jQuery event extensions](https://learn.jquery.com/events/event-extensions/) (note that the linked article is for jQuery 1.7; the details for extending events has [changed a little for jQuery 3](https://jquery.com/upgrade-guide/3.0/#breaking-change-jquery-event-props-and-jquery-event-fixhooks-removed) but you have to read the source to figure out what to do) to change the `keyup` and `keydown` event handlers to allow for filtering for specific sequences of keys.
+[ex](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ex.html) has a "map" command to map sequences of keystrokes to actions. This does the same thing (but `Map` was [already taken](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) so I went with `keymap`). The `keymap` function adds a [decorator](https://en.wikipedia.org/wiki/Decorator_pattern) to a [KeyboardEvent](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/KeyboardEvent) handler such that the handler is only called if the appropriate keys are pressed.
 
 So instead of 
 
 ````js
-$(element).on('keydown', event => {
+element.addEventListener('keydown', event => {
   if (event.key == 'A'){
     // do something
   }
@@ -17,14 +17,14 @@ $(element).on('keydown', event => {
 ````
 you can do
 ````js
-$(element).on('keydown', {keys: 'A'}, event => {
+element.addEventListener('keydown', keymap( 'A', event => {
   // do something
-});
+}));
 ````
 
 and instead of 
 ````js
-$(element).on('keydown', event => {
+element.addEventListener('keydown', event => {
   if (event.key == 'A' && event.altKey){
     // do something
   }
@@ -32,15 +32,15 @@ $(element).on('keydown', event => {
 ````
 you can do
 ````js
-$(element).on('keydown', {keys: 'alt-a'}, event => {
+element.addEventListener('keydown', keymap( 'alt-A', event => {
   // do something
-});
+}));
 ````
 
 And allowing sequences means that if you want to capture an A then B keypress, instead of something like:
 ````js
 let prefix = '';
-$(element).on('keydown', event => {
+element.addEventListener.on('keydown', event => {
   if (event.key == 'B' && prefix == 'A'){
     // do something
   }else if (event.key == 'A'){
@@ -52,49 +52,73 @@ $(element).on('keydown', event => {
 ````
 you can do
 ````js
-$(element).on('keydown', {keys: 'A B'}, event => {
+element.addEventListener('keydown', keymap( 'A B', event => {
   // do something
-});
+}));
 ````
 
 ## Usage
 
-The jquery.keymap.js file patches the jQuery `keydown` and `keyup` events to accept event handlers like:
 ````js
-$(element).on('keydown', {keys: keyDescriptorList: string [, allowDefault: boolean = false]}, handlerFunction);
+const newHandler = keymap ( keyDescriptor, handler [, prefixHandler]);
+
+element.addEventListener('keydown' or 'keyup', newHandler);
+
+element.removeEventListener('keydown' or 'keyup', newHandler);
 ````
 
-and allow removing handlers (in addition to all the other ways to remove handlers) with:
+`keyDescriptor` is a space-delimited list of keys, from the [`key` field of the `KeyboardEvent`](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values), with modifier keys prepended, in the order of `(ctrl-)?(alt-)?(shift-)?key`.
+The meta key and other modifier keys are not implemented. Printable characters (ones with a single-character `key` value) ignore the `shift`, since that is part of the character generated. So control-lowercase a would be `ctrl-a`; control-uppercase a would be `ctrl-A`; control-1 is `ctrl-1`, with no distinction between main keyboard and numerical keypad. Octothorpe would be `#`, not `shift-3` on a US keyboard. There are two exceptions:
+
+1. Space is `Spacebar`, not `" "`, since I use actual spaces to delimit key descriptors.
+2. Keys with ctrl- or alt- use the `code` field, rather than the `key` field. This way `ctrl-z` uses the 'Z' key, even on a Hebrew keyboard where the 'Z' key produces a 'ז'. My fingers want to use the shortcuts they already know. The keys are named according to
+their location on the [ANSI 101 keyboard](https://w3c.github.io/uievents-code/#keyboard-101); it's very US-centric. So `'ctrl-#'` is the '3' key with control pressed, no matter what keyboard you are using.
+
+That is the "normalized" form of the keys. The program allows lots of synonyms from [VIM](https://vimhelp.org/intro.txt.html#notation) and John Resig's [hotkeys plugin](https://github.com/jeresig/jquery.hotkeys), and [Microsoft's SendKeys command](https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sendkeys-statement). So `c+a` becomes `ctrl-a`, `^z` becomes `ctrl-z`, `%+{ESC}` becomes `alt-shift-Escape`. Look at the `normalize` function in the source code.
+
+The `keyDescriptor`can also be a regular expression: `/F\d+/` matches any function key; `/ctrl-[a-zA-Z] (Escape|Enter)/` matches any control-letter followed by the escape key or the enter key. The regular expression has to match the normalized form; it's not smart enough to translate the synonyms. Note the space between keys in the regular expression.
+
+`prefixHandler` is an event handler that handles "prefixes", the key sequences that lead to and including) the final one. If the `keyDescriptor` is `'ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight B A'`, then `prefixhandler` will be called with every key press as long as it is still generating a legal sequence. For example, if the user presses `ArrowUp`, `ArrowUp`, `ArrowDown`, `Enter`, then `prefixhandler` will be called three times. The default `prefixHandler` is `event => event.preventDefault()`, so the intermediate keys do not generate characters. To allow the keys to generate their usual characters (as with the [Konami cheat code](https://en.wikipedia.org/wiki/Konami_Code), you want everything to look normal until it is activated), use a no-op function, `event => event`.
+
+Note that `prefixHandler` is called even on the final key press of the sequence. Since the default `prefixHandler` is 
+`event => event.preventDefault()`, you do not need to add that to `handler`. I can't imagine a use case where that would not be the case, but
+if you wanted to prevent the default for the prefixes but not the final match, you could check that `event.keyDescriptor`
+is the full `keyDescriptor`.
+
+`keymap` adds two fields to the handler (not the prefix handler):
+1. `newHandler.keymapPrefix`, which is a [`Symbol`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol) that is used as the field in each event that holds the prefix for the sequence being built.
+2. `newHandler.keymapFilter`, which is the `keyDescriptor` that was passed to `keymap` initially.
+
+### new fields on Event
+
+The event passed to the event handlers will have three fields added:
+
+1. `event.keyDescriptor`, which is a string representing the key with its modifiers.
 
 ````js
-$(element).off('keydown', {keys: keyDescriptorList}); // removes all handlers that had that keyDescriptorString
+const event = new KeyboardEvent('keydown', {key: 'A', code: 'KeyA', shiftKey: true, ctrlKey: false, altKey: true})`
 ````
 
-`keyDescriptorList` is a space-delimited list of `keyDescriptor`s, each of which is the value of the [`key` field of the KeyboardEvent](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values), with modifier keys prepended, in the order of `(ctrl-)?(alt-)?(meta-)?(shift-)?key`. Printable characters (ones with a single-character `key` value) ignore the `shift`, since that is part of the character generated. So control-lowercase a would be `ctrl-a`; control-uppercase a would be `ctrl-A`; control-1 is `ctrl-1`, with no distinction between main keyboard and numerical keypad. Alt-octothorpe would be `alt-#`, not `alt-shift-3` on a US keyboard. There are two exceptions:
-1. Space is `Space`, not `" "`, since I use actual spaces to delimit key descriptors.
-2. Letters (a-z and A-Z) with modifiers use the `code` field, rather than the `key` field. This way `ctrl-z` uses the 'Z' key, even on a Hebrew keyboard where the 'Z' key produces a 'ז'. My fingers want to use the shortcuts they already know.
+would have `event.keyDescriptor === 'alt-A'` when passed to the event handers.
 
-That is the "normalized" form of the keys. The program allows lots of synonyms from VIM and John Resig's [hotkeys plugin](https://github.com/jeresig/jquery.hotkeys), and [Microsoft's SendKeys command](https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/sendkeys-statement).So `c+a` becomes `ctrl-a`, `^z` becomes `ctrl-z`, `%+{ESC}` becomes `alt-shift-Escape`. Look at the `aliasgenerator` list in the source code.
+2. `event.keymapSequence` that contains the list of keys processed so far. So for a handler like
 
-The `keyDescriptorString`can also be a regular expression: `keys: /F\d+/` matches any function key; `keys: /ctrl-[a-zA-z] (Escape|Enter)/` matches any control-letter followed by the escape key or the enter key. The regular expression has to match the normalized form; it's not smart enough to translate the synonyms. Note the space between keys in the regular expression.
+````js
+const handler = keymap (/Escape [a-z]/, evt => console.log(evt.keymapSequence));
+element.addEventListener('keydown', handler);
+````
 
-The `allowDefault` option addresses the problem of keys that match the 'prefix' of the `keyDescriptorString`. The handler is only called after all the keys match, so `event.preventDefault()` will only prevent the default on that last key. `$(element).on('keydown', {keys: 'ArrowUp ArrowUp ArrowDown ArrowDown'}, handler)` will still propagate the first three keys (`ArrowUp ArrowUp ArrowDown`) even if `handler` calls `preventDefault`. The program assumes that's *not* what you want and calls `preventDefault` on every key event, unless `allowDefault` is true.
+Then pressing `Escape` then `q` will log `"Escape q`.
 
-## Event handling
-
-Every `keyup` or `keydown` event has a new field added: `keymap`, that is set to the normalized form of the key event. So an event with `key: 'a', ctrlKey: true, altKey: true` will get a field `keymap: 'ctrl-alt-a'`. That is what is compared to the key descriptor in the event handler.
-
-If the event matches the prefix of a key descriptor (in the example above,  `$(element).on('keydown', {keys: 'ArrowUp ArrowUp ArrowDown ArrowDown'}, handler)`, after a single `ArrowUp` or after two `ArrowUp`s and an `ArrowDown`, meaning that it is still possible to match this descriptor), then a custom event `keymapprefix` is triggered with: `$(element).trigger('keymapprefix', [currentSequenceOfKeyDescriptors]);`. When the entire sequence is matched, in addition to running `handler`, a custom event `keymapcomplete` is similarly triggered. 
+3. `event.keymapFilter` is the `keyDescriptor` that was passed to `keymap` initially (it is just `newHandler.keymapFilter`). In the above example, `event.keymapFilter === /Escape [a-z]/`.
 
 ## Other functions
 
-The program exposes three internal functions: 
+The program exposes three two internal functions: 
 
-`jQuery.keymap(event)` adds the `keymap` field to the event if it is has the appropriate `KeyboardEvent` fields set (`key` and `code`).
+`keymap.addKeyDescriptor(event)` adds the `keyDescriptor` field to the event.
 
-`jQuery.keymap.normalizeString(keyDescriptor)` returns the normalized form of `keyDescriptor`. For example, `$.keymap.normalizeString('^{up}')` returns `'ctrl-ArrowUp'`.
-
-`jQuery.keymap.normalizeList(keyDescriptor)` does the same for a space-delimited list of descriptors. For example, `$.keymap.normalizeList('{up} {up} {down} {down}')` returns `'ArrowUp ArrowUp ArrowDown ArrowDown'`.
+`keymap.normalize(keyDescriptor)` returns the normalized form of `keyDescriptor`. For example, `keymap.normalize('^{up}')` returns `'ctrl-ArrowUp'` and `keymap.normalize('{up} {up} {down} {down}')` returns `'ArrowUp ArrowUp ArrowDown ArrowDown'`.
 
 
 
